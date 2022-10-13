@@ -5,7 +5,7 @@ with open('README.md', 'r', encoding='utf-8') as fh:
 
 setuptools.setup(
     name = 'vistal',
-    version = '0.0.2',
+    version = '0.1.0',
     author = 'x4Cx58x54',
     description = 'A visualization tool for temporal action localization',
     long_description = long_description,
@@ -32,6 +32,7 @@ setuptools.setup(
     packages = setuptools.find_packages(),
     python_requires = '>=3.7',
     install_requires = [
+        'numpy',
         'distinctipy>=1.2.2',
     ],
 )

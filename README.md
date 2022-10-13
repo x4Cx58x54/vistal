@@ -22,7 +22,7 @@ Import the library
 from vistal import vistal, ColourScheme, Colour
 ```
 
-By now this tool supports non-overlapping localization results, i.e. action segmentation results. Pack these temporal labels into a list of `tuple(start, end, label_id)`, for example:
+Pack the temporal labels into a list of `tuple(start, end, label_id)`, for example:
 
 ```python
 prediction = [
@@ -34,7 +34,7 @@ prediction = [
 ]
 ```
 
-`start` and `end` are integers or floats in seconds, and `label_id` are integer IDs for each action.
+`start` and `end` are integers or floats in seconds, and `label_id` are integer IDs for each action. It is best that the whole video duration is covered by `(start, end)` sections.
 
 And the actual temporal label, for example, is
 
@@ -112,7 +112,7 @@ Save to an `.ass` file:
 sub.save('tutorial.ass')
 ```
 
-Finally, play the video and load the subtitle to the player. Make sure your video player supports `.ass` subtitle, for example VLC media player and PotPlayer. Here is how it looks like on a blank video:
+Finally, play the video and load the subtitle to the player. Make sure your video player supports `.ass` subtitle, for example PotPlayer. (It is noticed that VLC Player sometimes does not display the timeline.) Here is how it looks like on a blank video:
 
 <p align="center" width="100%">
     <img width="60%" src="./img/tutorial_result.gif">
