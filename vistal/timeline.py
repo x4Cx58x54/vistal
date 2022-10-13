@@ -194,6 +194,12 @@ class Timeline(EventItemContainer):
 
         name_text = Position(tl_pos.text_x, tl_pos.text_y)
         name_text += f'{self.name}:  '
+        self.event_items.append(
+            EventItem(
+                name='Dialogue', Start=Time(0), End=Time(video_duration),
+                Style='TimelineText', Text=name_text
+            )
+        )
 
         # Label texts
         for start, end, label_ids in temporal_list_rep:
@@ -215,6 +221,8 @@ class Timeline(EventItemContainer):
 
         # Colour rectangles
         for start, end, label_ids in temporal_list_rep:
+            if len(label_ids) == 0:
+                continue
             rect_x = start / video_duration * tl_pos_cal.display_width
             rect_y = tl_pos.timeline_y
             rect_w = (end-start) / video_duration * tl_pos_cal.display_width
@@ -222,20 +230,21 @@ class Timeline(EventItemContainer):
             rect_l_h = rect_h / len(label_ids)
 
             for label_i, label_id in enumerate(label_ids):
-                if colour_scheme[label_id].alpha != 255:
-                    rect = Rectangle(
-                        rect_x,
-                        rect_y + label_i*rect_l_h,
-                        rect_w,
-                        rect_l_h
+                if colour_scheme[label_id].alpha == 255:
+                    continue
+                rect = Rectangle(
+                    rect_x,
+                    rect_y + label_i*rect_l_h,
+                    rect_w,
+                    rect_l_h
+                )
+                rect = colour_scheme[label_id].tag() + rect
+                self.event_items.append(
+                    EventItem(
+                        'Dialogue', Start=Time(0), End=Time(video_duration),
+                        Style='TimelineRect', Text=Position(0, 0)+rect
                     )
-                    rect = colour_scheme[label_id].tag() + rect
-                    self.event_items.append(
-                        EventItem(
-                            'Dialogue', Start=Time(0), End=Time(video_duration),
-                            Style='TimelineRect', Text=Position(0, 0)+rect
-                        )
-                    )
+                )
 
         # Moving cursor
         rect_cursor = Colour().tag()
