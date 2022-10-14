@@ -93,7 +93,7 @@ class ColourScheme:
 @dataclass
 class TimelinePosition:
     timeline_x: int
-    timeline_y: int
+    timeline_ys: List[int]
     text_x: int
     text_y: int
 
@@ -102,30 +102,44 @@ class TimelinePositionCalculator:
     def __init__(
         self,
         display_width, display_height,
-        timeline_height, timeline_margin_bot,
+        timeline_height, timeline_margin_top, timeline_margin_bot,
         font_size, text_margin_top, text_margin_bot, text_margin_left,
-        cursor_width
+        cursor_width, n_fold
     ):
         self.display_width = display_width
         self.display_height = display_height
         self.timeline_height = timeline_height
+        self.timeline_margin_top = timeline_margin_top
         self.timeline_margin_bot = timeline_margin_bot
         self.font_size = font_size
         self.text_margin_top = text_margin_top
         self.text_margin_bot = text_margin_bot
         self.text_margin_left = text_margin_left
         self.cursor_width = cursor_width
-    def __call__(self, idx):
+        self.n_fold = n_fold
+    def __call__(self, idx) -> TimelinePosition:
+        bar_per_height = self.timeline_margin_top + self.timeline_height
         bar_total_height = (
             self.text_margin_top + self.text_margin_bot + self.font_size
-          + self.timeline_margin_bot + self.timeline_height
+          + bar_per_height*self.n_fold + self.timeline_margin_bot
         )
         bar_bot = self.display_height - bar_total_height * idx
-        timeline_x = 0
-        timeline_y = bar_bot - self.timeline_margin_bot - self.timeline_height
         text_x = self.text_margin_left
-        text_y = timeline_y - self.text_margin_bot - self.font_size
-        return TimelinePosition(timeline_x, timeline_y, text_x, text_y)
+        text_y = (
+            bar_bot
+          - self.timeline_margin_bot - bar_per_height*self.n_fold
+          - self.text_margin_bot - self.font_size
+        )
+        timeline_x = 0
+        timeline_ys = []
+        for i in range(self.n_fold):
+            timeline_ys.append(
+                bar_bot
+              - self.timeline_margin_bot
+              - bar_per_height*(self.n_fold-i)
+              + self.timeline_margin_top
+            )
+        return TimelinePosition(timeline_x, timeline_ys, text_x, text_y)
 
 
 class EventItemContainer:
@@ -137,23 +151,25 @@ class EventItemContainer:
 
 import numpy as np
 
-def temporal_repartition(temporal_list):
+def temporal_repartition(temporal_list, n_fold, video_duration):
     '''
     Handles overlaps between sections. Repartition the time dimension into
-    disjoint parts, each associated with a list of label IDs. For example:
+    disjoint parts, each associated with a list of label IDs and then devide
+    into equal n_fold parts with equal durations. For example:
     temporal_repartition([
         (1, 3, 0),
         (2, 4, 1),
     ])
     =>
-    [
+    [[
         (1, 2, [0]),
         (2, 3, [0, 1]),
         (3, 4, [1]),
-    ]
+    ]]
     '''
     new_temporal_list = []
-    timestamps = []
+    div_points = [video_duration * i / n_fold for i in range(1, n_fold)]
+    timestamps = [i for i in div_points] # a deep copy
     for start, end, label_id in temporal_list:
         timestamps.append(start)
         timestamps.append(end)
@@ -165,7 +181,16 @@ def temporal_repartition(temporal_list):
             if start_0 <= middle < end_0:
                 middle_label_ids.append(label_id_0)
         new_temporal_list.append((start,end,np.unique(middle_label_ids)))
-    return new_temporal_list
+
+    div_parts_start = [0] + div_points
+    cur_i_div = 0
+    new_temporal_list_folded = [[] for _ in range(n_fold)]
+    for i in new_temporal_list:
+        start, end, label_ids = i
+        if cur_i_div < n_fold-1 and (start+end)/2 >= div_parts_start[cur_i_div+1]:
+            cur_i_div += 1
+        new_temporal_list_folded[cur_i_div].append(i)
+    return new_temporal_list_folded
 
 
 class Timeline(EventItemContainer):
@@ -173,7 +198,8 @@ class Timeline(EventItemContainer):
         self, name: str,
         tl_pos_cal: TimelinePositionCalculator, idx: int,
         temporal_list, video_duration, label_names,
-        colour_scheme: ColourScheme
+        colour_scheme: ColourScheme,
+        n_fold: int
     ):
         super().__init__()
         self.name = name
@@ -188,7 +214,7 @@ class Timeline(EventItemContainer):
         else:
             raise ValueError('Unsupported label_names type.')
 
-        temporal_list_rep = temporal_repartition(temporal_list)
+        t_list_rep = temporal_repartition(temporal_list, n_fold, video_duration)
 
         tl_pos = tl_pos_cal(idx)
 
@@ -201,62 +227,70 @@ class Timeline(EventItemContainer):
             )
         )
 
-        # Label texts
-        for start, end, label_ids in temporal_list_rep:
-            label_texts = []
-            for label_i, label_id in enumerate(label_ids):
-                label_text = str(label_id).rjust(max_label_len)
-                label_text += colour_scheme[label_id].tag() # set colour for the square
-                label_text += ' {\\bord1\\shad0}' # no border and shadow for the square
-                label_text += get_inline_rectangle(tl_pos_cal.font_size)
-                label_text += '{\\r}' # reset style
-                label_text += f' {label_names[label_id]}'
-                label_texts.append(label_text)
-            self.event_items.append(
-                EventItem(
-                    name='Dialogue', Start=Time(start), End=Time(end),
-                    Style='TimelineText', Text=name_text+', '.join(label_texts)
-                )
-            )
-
-        # Colour rectangles
-        for start, end, label_ids in temporal_list_rep:
-            if len(label_ids) == 0:
-                continue
-            rect_x = start / video_duration * tl_pos_cal.display_width
-            rect_y = tl_pos.timeline_y
-            rect_w = (end-start) / video_duration * tl_pos_cal.display_width
-            rect_h = tl_pos_cal.timeline_height
-            rect_l_h = rect_h / len(label_ids)
-
-            for label_i, label_id in enumerate(label_ids):
-                if colour_scheme[label_id].alpha == 255:
-                    continue
-                rect = Rectangle(
-                    rect_x,
-                    rect_y + label_i*rect_l_h,
-                    rect_w,
-                    rect_l_h
-                )
-                rect = colour_scheme[label_id].tag() + rect
+        for i_fold in range(n_fold):
+            # Label texts
+            for start, end, label_ids in t_list_rep[i_fold]:
+                label_texts = []
+                for label_i, label_id in enumerate(label_ids):
+                    label_text = str(label_id).rjust(max_label_len)
+                    label_text += colour_scheme[label_id].tag() # set colour for the square
+                    label_text += ' {\\bord1\\shad0}' # no border and shadow for the square
+                    label_text += get_inline_rectangle(tl_pos_cal.font_size)
+                    label_text += '{\\r}' # reset style
+                    label_text += f' {label_names[label_id]}'
+                    label_texts.append(label_text)
                 self.event_items.append(
                     EventItem(
-                        'Dialogue', Start=Time(0), End=Time(video_duration),
-                        Style='TimelineRect', Text=Position(0, 0)+rect
+                        name='Dialogue', Start=Time(start), End=Time(end),
+                        Style='TimelineText', Text=name_text+', '.join(label_texts)
                     )
                 )
 
-        # Moving cursor
-        rect_cursor = Colour().tag()
-        rect_cursor += Move(0, tl_pos.timeline_y,
-        tl_pos_cal.display_width, tl_pos.timeline_y)
-        rect_cursor += Rectangle(0, 0, tl_pos_cal.cursor_width, tl_pos_cal.timeline_height)
-        self.event_items.append(
-            EventItem(
-                name='Dialogue', Start=Time(0), End=Time(video_duration),
-                Style='MovingCursor', Text=rect_cursor
+            # Colour rectangles
+            for start, end, label_ids in t_list_rep[i_fold]:
+                if len(label_ids) == 0:
+                    continue
+                rect_x = start / video_duration * tl_pos_cal.display_width * n_fold
+                rect_y = tl_pos.timeline_ys[i_fold]
+                rect_w = (end-start) / video_duration * tl_pos_cal.display_width * n_fold
+                rect_h = tl_pos_cal.timeline_height
+                rect_l_h = rect_h / len(label_ids)
+
+                for label_i, label_id in enumerate(label_ids):
+                    if colour_scheme[label_id].alpha == 255:
+                        continue
+                    rect = Rectangle(
+                        rect_x - tl_pos_cal.display_width*i_fold,
+                        rect_y + label_i*rect_l_h,
+                        rect_w,
+                        rect_l_h
+                    )
+                    rect = colour_scheme[label_id].tag() + rect
+                    self.event_items.append(
+                        EventItem(
+                            'Dialogue', Start=Time(0), End=Time(video_duration),
+                            Style='TimelineRect', Text=Position(0, 0)+rect
+                        )
+                    )
+
+            # Moving cursor
+            rect_cursor = Colour().tag()
+            rect_cursor += Move(
+                0, tl_pos.timeline_ys[i_fold],
+                tl_pos_cal.display_width, tl_pos.timeline_ys[i_fold]
             )
-        )
+            rect_cursor += Rectangle(
+                0, 0,
+                tl_pos_cal.cursor_width, tl_pos_cal.timeline_height
+            )
+            start = i_fold / n_fold * video_duration
+            end = (i_fold+1) / n_fold * video_duration
+            self.event_items.append(
+                EventItem(
+                    name='Dialogue', Start=Time(start), End=Time(end),
+                    Style='MovingCursor', Text=rect_cursor
+                )
+            )
 
 
 class ColourSchemeLegend(EventItemContainer):

@@ -25,6 +25,7 @@ def vistal(
     video_duration: Union[int, float],
     display_width: int = 3840, display_height: int = 2160,
     timeline_height: Optional[int] = None,
+    timeline_margin_top: Optional[int] = None,
     timeline_margin_bot: Optional[int] = None,
     font_size: Optional[int] = None, font_name='Ubuntu Mono',
     text_colour : Optional[Colour] = None,
@@ -34,7 +35,8 @@ def vistal(
     text_outline: Optional[int] = None,
     text_shadow: Optional[int] = None,
     cursor_width: Optional[int] = None,
-    show_legend = False
+    show_legend = False,
+    n_fold: int = 1,
 ):
     '''
     Construct the main visualization elements.
@@ -64,7 +66,8 @@ def vistal(
 
         timeline_height: optional int of coloured timeline height in pixels.
 
-        timeline_margin_bot: optional int of timeline bottom margin in pixels.
+        timeline_margin_top, timeline_margin_bot: optional int of timeline
+        margins in pixels.
 
         font_size: optional int of font size in pixels.
 
@@ -85,6 +88,9 @@ def vistal(
 
         show_legend: bool for whether show colour legend.
 
+        n_fold: fold each timeline into equal parts for clearer illustration for
+        relatively short actions.
+
     Returns:
 
         An AssSubtitle object, containing the visualization elements for temporal
@@ -92,11 +98,13 @@ def vistal(
     '''
 
     if timeline_height is None:
-        timeline_height = max(display_height // 40, 1)
+        timeline_height = max(display_height // 20, 1)
+    if timeline_margin_top is None:
+        timeline_margin_top = max(display_height // 120, 1)
     if timeline_margin_bot is None:
         timeline_margin_bot = 0
     if font_size is None:
-        font_size = max(display_height // 54, 10)
+        font_size = max(display_height // 24, 10)
     if text_colour is None:
         text_colour = Colour() # white
     if text_margin_top is None:
@@ -144,15 +152,15 @@ def vistal(
 
     tl_pos_cal = TimelinePositionCalculator(
         display_width, display_height,
-        timeline_height, timeline_margin_bot,
+        timeline_height, timeline_margin_top, timeline_margin_bot,
         font_size, text_margin_top, text_margin_bot, text_margin_left,
-        cursor_width
+        cursor_width, n_fold
     )
 
     for i, (name, temporal_list) in enumerate(temporal_list_dict.items()):
         timeline = Timeline(
             name, tl_pos_cal, i, temporal_list, video_duration, label_names,
-            colour_scheme
+            colour_scheme, n_fold
         )
         for item in timeline:
             es.append_item(item)
