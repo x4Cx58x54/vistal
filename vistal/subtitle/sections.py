@@ -121,8 +121,7 @@ class Events(Section):
 
 class AssSubtitle:
     '''
-    Contains an ASS subtitle. Apply str function to get the content in string
-    form. Apply save method to save to a file.
+    Contains an ASS subtitle. Apply str function to get the content in string form. Apply save method to save to a file.
     '''
     def __init__(self, *args: Section):
         self.args = args
@@ -136,8 +135,7 @@ class AssSubtitle:
 
             path: pathlib.Path or str, the path of the file to save.
 
-            confirm_overwrite: optional bool, whether confirmation is needed
-            before overwriting existing file.
+            confirm_overwrite: optional bool, whether confirmation is needed before overwriting existing file.
         '''
         path = Path(path)
         if path.exists() and confirm_overwrite:

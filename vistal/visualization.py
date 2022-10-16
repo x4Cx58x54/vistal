@@ -104,9 +104,6 @@ def vistal(
     if timeline_height is None:
         timeline_height = max(display_height // 20, 1) # default 108
     if timeline_margin_top is None:
-        # if n_fold == 1:
-        #     timeline_margin_top = 0
-        # else:
         timeline_margin_top = max(display_height // 240, 1) # default 9
     if timeline_margin_bot is None:
         timeline_margin_bot = 0

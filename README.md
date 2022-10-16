@@ -42,9 +42,8 @@ And the actual temporal label, for example, is
 ground_truth = [
     ( 0,     1,     0),
     ( 1,     1.8,   3),
-    ( 1.8,   3.7,   1),
-    ( 3.7,   4.5,   3),
-    ( 4.5,   6,     2),
+    ( 1.8,   5,     1),
+    ( 4,     6,     2),
 ]
 ```
 
@@ -131,6 +130,6 @@ For another complete example, see [example.py](./example.py).
 * Why are everything looks like stretched?
     * `display_width` and `display_height` do not match the video aspect ratio.
 * How to burn the subtitles into the video?
-    * FFmpeg is capable of doing this. For example: `ffmpeg -i {input_video_path} -vf scale={width}x{height},subtitles={subtitle_path} {output_path}`
+    * FFmpeg is capable of doing this. For example: `ffmpeg -i {input_video_path} -vf scale={width}x{height},subtitles={subtitle_path} {output_path}`. [FFmpeg wiki: How To Burn Subtitles Into Video](https://trac.ffmpeg.org/wiki/HowToBurnSubtitlesIntoVideo)
 * How to put the subtitles outside the video?
     * The solution is for PotPlayer. Aspect ratio of the display area (not video) leaving enough room for the subtitles needs to be determined beforehand, applied in right click -> Window Size -> Set Custom Window Size. Then `display_width` and `display_height` should match it too. Before playing the video, uncheck "Display text subs inside the video" in Preferences -> Subtitles.
