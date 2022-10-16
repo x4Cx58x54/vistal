@@ -5,7 +5,7 @@ with open('README.md', 'r', encoding='utf-8') as fh:
 
 setuptools.setup(
     name = 'vistal',
-    version = '0.1.0',
+    version = '0.1.1',
     author = 'x4Cx58x54',
     description = 'A visualization tool for temporal action localization',
     long_description = long_description,

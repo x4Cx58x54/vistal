@@ -44,6 +44,8 @@ class Colour(DialogueText):
         return Colour(self.b, self.g, self.r, self.alpha, 'tag')
     def style(self):
         return Colour(self.b, self.g, self.r, self.alpha, 'style')
+    def is_transparent(self):
+        return self.alpha == 255
     def __str__(self):
         if self.mode == 'tag':
             return f'{{\\1a&H{self.alpha:02X}&\\c&H{self.b:02X}{self.g:02X}{self.r:02X}&}}'

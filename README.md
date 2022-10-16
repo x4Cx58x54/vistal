@@ -112,10 +112,25 @@ Save to an `.ass` file:
 sub.save('tutorial.ass')
 ```
 
-Finally, play the video and load the subtitle to the player. Make sure your video player supports `.ass` subtitle, for example PotPlayer. (It is noticed that VLC Player sometimes does not display the timeline.) Here is how it looks like on a blank video:
+Finally, play the video and load the subtitle to the player. Make sure your video player supports `.ass` subtitle, for example PotPlayer. Here is how it looks like on a blank video:
 
 <p align="center" width="100%">
     <img width="60%" src="./img/tutorial_result.gif">
 </p>
 
 For another complete example, see [example.py](./example.py).
+
+# FAQ
+
+* What video player supports the generated subtitles?
+    * As far as I am aware of, VLC media player and PotPlayer on Windows works fine.
+* Why the VLC media player sometimes fails to show some elements?
+    * Try restart the video, without unloading the subtitles. For example, click "next media" while in "loop one" mode.
+* The moving cursor jumps rather than moves in PotPlayer.
+    * Try right click video -> subtitles -> Enable ASS/SSA subtitle animations.
+* Why are everything looks like stretched?
+    * `display_width` and `display_height` do not match the video aspect ratio.
+* How to burn the subtitles into the video?
+    * FFmpeg is capable of doing this. For example: `ffmpeg -i {input_video_path} -vf scale={width}x{height},subtitles={subtitle_path} {output_path}`
+* How to put the subtitles outside the video?
+    * The solution is for PotPlayer. Aspect ratio of the display area (not video) leaving enough room for the subtitles needs to be determined beforehand, applied in right click -> Window Size -> Set Custom Window Size. Then `display_width` and `display_height` should match it too. Before playing the video, uncheck "Display text subs inside the video" in Preferences -> Subtitles.

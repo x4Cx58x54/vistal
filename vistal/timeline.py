@@ -117,17 +117,18 @@ class TimelinePositionCalculator:
         self.text_margin_left = text_margin_left
         self.cursor_width = cursor_width
         self.n_fold = n_fold
-    def __call__(self, idx) -> TimelinePosition:
-        bar_per_height = self.timeline_margin_top + self.timeline_height
-        bar_total_height = (
+
+        self.bar_per_height = self.timeline_margin_top + self.timeline_height
+        self.bar_total_height = (
             self.text_margin_top + self.text_margin_bot + self.font_size
-          + bar_per_height*self.n_fold + self.timeline_margin_bot
+          + self.bar_per_height*self.n_fold + self.timeline_margin_bot
         )
-        bar_bot = self.display_height - bar_total_height * idx
+    def __call__(self, idx) -> TimelinePosition:
+        bar_bot = self.display_height - self.bar_total_height * idx
         text_x = self.text_margin_left
         text_y = (
             bar_bot
-          - self.timeline_margin_bot - bar_per_height*self.n_fold
+          - self.timeline_margin_bot - self.bar_per_height*self.n_fold
           - self.text_margin_bot - self.font_size
         )
         timeline_x = 0
@@ -136,7 +137,7 @@ class TimelinePositionCalculator:
             timeline_ys.append(
                 bar_bot
               - self.timeline_margin_bot
-              - bar_per_height*(self.n_fold-i)
+              - self.bar_per_height*(self.n_fold-i)
               + self.timeline_margin_top
             )
         return TimelinePosition(timeline_x, timeline_ys, text_x, text_y)
@@ -183,13 +184,13 @@ def temporal_repartition(temporal_list, n_fold, video_duration):
         new_temporal_list.append((start,end,np.unique(middle_label_ids)))
 
     div_parts_start = [0] + div_points
-    cur_i_div = 0
+    i_fold = 0
     new_temporal_list_folded = [[] for _ in range(n_fold)]
     for i in new_temporal_list:
         start, end, label_ids = i
-        if cur_i_div < n_fold-1 and (start+end)/2 >= div_parts_start[cur_i_div+1]:
-            cur_i_div += 1
-        new_temporal_list_folded[cur_i_div].append(i)
+        if i_fold < n_fold-1 and (start+end)/2 >= div_parts_start[i_fold+1]:
+            i_fold += 1
+        new_temporal_list_folded[i_fold].append(i)
     return new_temporal_list_folded
 
 
@@ -199,7 +200,8 @@ class Timeline(EventItemContainer):
         tl_pos_cal: TimelinePositionCalculator, idx: int,
         temporal_list, video_duration, label_names,
         colour_scheme: ColourScheme,
-        n_fold: int
+        n_fold: int,
+        background_colour: Colour
     ):
         super().__init__()
         self.name = name
@@ -257,7 +259,7 @@ class Timeline(EventItemContainer):
                 rect_l_h = rect_h / len(label_ids)
 
                 for label_i, label_id in enumerate(label_ids):
-                    if colour_scheme[label_id].alpha == 255:
+                    if colour_scheme[label_id].is_transparent():
                         continue
                     rect = Rectangle(
                         rect_x - tl_pos_cal.display_width*i_fold,
@@ -292,6 +294,22 @@ class Timeline(EventItemContainer):
                 )
             )
 
+        # background colour
+        if not background_colour.is_transparent():
+            bg_rect = Position(0, 0)
+            bg_rect += background_colour.tag()
+            bg_rect += Rectangle(
+                0, tl_pos.timeline_ys[0],
+                tl_pos_cal.display_width,
+                n_fold*tl_pos_cal.bar_per_height- tl_pos_cal.timeline_margin_top
+            )
+            self.event_items.append(
+                EventItem(
+                    'Dialogue', Start=Time(0), End=Time(video_duration),
+                    Layer=0, Style='TimelineRect', Text=bg_rect
+                )
+            )
+
 
 class ColourSchemeLegend(EventItemContainer):
     def __init__(
@@ -317,5 +335,5 @@ class ColourSchemeLegend(EventItemContainer):
 
         self.event_items = [EventItem(
             name='Dialogue', Start=Time(start), End=Time(end),
-            Style='TimelineText', Text=text
+            Style='LegendText', Text=text
         )]

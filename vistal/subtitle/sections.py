@@ -97,7 +97,7 @@ class EventItem(Item):
     def __init__(
         self,
         name: str = 'Dialogue', # Literal['Format', 'Dialogue']
-        Layer = 0,
+        Layer = 1,
         Start: Union[Time, str] = Time(0),
         End: Union[Time, str] = Time(0),
         Style = 'Default',

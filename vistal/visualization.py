@@ -37,6 +37,7 @@ def vistal(
     cursor_width: Optional[int] = None,
     show_legend = False,
     n_fold: int = 1,
+    background_colour: Colour = Colour(alpha=255),
 ):
     '''
     Construct the main visualization elements.
@@ -91,6 +92,9 @@ def vistal(
         n_fold: fold each timeline into equal parts for clearer illustration for
         relatively short actions.
 
+        background_colour: optional Colour for background colour of the coloured
+        timelines.
+
     Returns:
 
         An AssSubtitle object, containing the visualization elements for temporal
@@ -98,27 +102,30 @@ def vistal(
     '''
 
     if timeline_height is None:
-        timeline_height = max(display_height // 20, 1)
+        timeline_height = max(display_height // 20, 1) # default 108
     if timeline_margin_top is None:
-        timeline_margin_top = max(display_height // 120, 1)
+        # if n_fold == 1:
+        #     timeline_margin_top = 0
+        # else:
+        timeline_margin_top = max(display_height // 240, 1) # default 9
     if timeline_margin_bot is None:
         timeline_margin_bot = 0
     if font_size is None:
-        font_size = max(display_height // 24, 10)
+        font_size = max(display_height // 24, 10) # default 90
     if text_colour is None:
         text_colour = Colour() # white
     if text_margin_top is None:
-        text_margin_top = max(display_height // 360, 1)
+        text_margin_top = max(display_height // 360, 1) # default 6
     if text_margin_bot is None:
-        text_margin_bot = max(display_height // 200, 1)
+        text_margin_bot = max(display_height // 200, 1) # default 10
     if text_margin_left is None:
-        text_margin_left = max(display_height // 100, 1)
+        text_margin_left = max(display_height // 100, 1) # default 21
     if text_outline is None:
-        text_outline = max(display_height // 400, 1)
+        text_outline = max(display_height // 400, 1) # default 5
     if text_shadow is None:
         text_shadow = 1
     if cursor_width is None:
-        cursor_width = max(display_height // 500, 1)
+        cursor_width = max(display_height // 500, 1) # default 4
 
 
     si = ScriptInfo(
@@ -148,6 +155,13 @@ def vistal(
         BorderStyle=0, Outline=text_outline, Shadow=text_shadow,
         Alignment=7, MarginL=0, MarginR=10, MarginV=10
     ))
+    vs.append_item(V4PlusStyleItem(
+        'Style', Name='LegendText',
+        Fontname=font_name, Fontsize=font_size,
+        PrimaryColour=text_colour.style(),
+        BorderStyle=0, Outline=text_outline, Shadow=text_shadow,
+        Alignment=7, MarginL=0, MarginR=10, MarginV=10
+    ))
     es = Events()
 
     tl_pos_cal = TimelinePositionCalculator(
@@ -160,7 +174,7 @@ def vistal(
     for i, (name, temporal_list) in enumerate(temporal_list_dict.items()):
         timeline = Timeline(
             name, tl_pos_cal, i, temporal_list, video_duration, label_names,
-            colour_scheme, n_fold
+            colour_scheme, n_fold, background_colour
         )
         for item in timeline:
             es.append_item(item)
