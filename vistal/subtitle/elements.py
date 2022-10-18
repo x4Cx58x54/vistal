@@ -76,19 +76,8 @@ class Point:
     def __init__(self, x: Union[int, float], y: Union[int, float]):
         self.x = x
         self.y = y
-        self.type = int # one of the coord is float, point is float
-        if isinstance(self.x, float):
-            self.type = float
-            self.x_str = f'{self.x:.2f}'
-        else:
-            self.x_str = str(self.x)
-        if isinstance(self.y, float):
-            self.type = float
-            self.y_str = f'{self.y:.2f}'
-        else:
-            self.y_str = str(self.y)
     def __str__(self):
-        return f'{self.x_str} {self.y_str}'
+        return f'{round(self.x)} {round(self.y)}'
     def __mul__(self, other):
         return Point(self.x*other, self.y*other)
     def __rmul__(self, other):
@@ -106,21 +95,14 @@ class Rectangle(DialogueText):
         self.top_right = Point(self.x+self.w, self.y)
         self.bot_left  = Point(self.x,        self.y+self.h)
         self.bot_right = Point(self.x+self.w, self.y+self.h)
-        self.type = int
-        for i in (self.top_left, self.top_right, self.bot_left, self.bot_right):
-            if i.type == float:
-                self.type = float
-                break
-        self.draw_mode:int = 1 if self.type == int else 4 # ass \p tag number
-        self.resolution_scale = 2**(self.draw_mode-1)
     def __str__(self):
         res = ''
-        res += f'{{\\p{self.draw_mode}}}'
-        res += f'm {self.top_left *self.resolution_scale} '
-        res += f'l {self.top_right*self.resolution_scale} '
-        res += f'l {self.bot_right*self.resolution_scale} '
-        res += f'l {self.bot_left *self.resolution_scale} '
-        res += f'l {self.top_left *self.resolution_scale} '
+        res += f'{{\\p1}}'
+        res += f'm {self.top_left} '
+        res += f'l {self.top_right} '
+        res += f'l {self.bot_right} '
+        res += f'l {self.bot_left} '
+        res += f'c'
         res += f'{{\\p0}}'
         return res
 

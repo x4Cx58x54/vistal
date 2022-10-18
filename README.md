@@ -1,7 +1,7 @@
 # VISTAL: A visualization tool for temporal action localization
 
 <p align="center" width="100%">
-    <img width="60%" src="./img/example_result.gif">
+    <img width="60%" src="https://raw.githubusercontent.com/x4Cx58x54/vistal/master/img/example_result.gif">
 </p>
 
 A lightweight tool for visualizing temporal action localization results. It generates .ass subtitle files containing timelines for videos.
@@ -77,11 +77,11 @@ Or, we can generate some random colours. The last action is background, therefor
 colour_scheme = ColourScheme(n_colours=4, transparent_id=3)
 ```
 
-Suppose the video resolution is 1280x720, and it lasts for 6 seconds:
+Suppose the video resolution is 1280x720, and it lasts for 6 seconds. By default, the display area of the subtitles is the same as the video frame area. Scale up the display resolution by 2 times, because a few thousand is normally enough:
 
 ```python
-display_width = 1280
-display_height = 720
+display_width = 1280 * 2
+display_height = 720 * 2
 video_duration = 6
 ```
 
@@ -113,23 +113,42 @@ sub.save('tutorial.ass')
 
 Finally, play the video and load the subtitle to the player. Make sure your video player supports `.ass` subtitle, for example PotPlayer. Here is how it looks like on a blank video:
 
-<p align="center" width="100%">
-    <img width="60%" src="./img/tutorial_result.gif">
-</p>
+https://raw.githubusercontent.com/x4Cx58x54/vistal/master/img/tutorial_result.mp4
 
 For another complete example, see [example.py](./example.py).
 
 # FAQ
 
-* What video player supports the generated subtitles?
-    * As far as I am aware of, VLC media player and PotPlayer on Windows works fine.
-* Why the VLC media player sometimes fails to show some elements?
-    * Try restart the video, without unloading the subtitles. For example, click "next media" while in "loop one" mode.
-* The moving cursor jumps rather than moves in PotPlayer.
-    * Try right click video -> subtitles -> Enable ASS/SSA subtitle animations.
-* Why are everything looks like stretched?
-    * `display_width` and `display_height` do not match the video aspect ratio.
-* How to burn the subtitles into the video?
-    * FFmpeg is capable of doing this. For example: `ffmpeg -i {input_video_path} -vf scale={width}x{height},subtitles={subtitle_path} {output_path}`. [FFmpeg wiki: How To Burn Subtitles Into Video](https://trac.ffmpeg.org/wiki/HowToBurnSubtitlesIntoVideo)
-* How to put the subtitles outside the video?
-    * The solution is for PotPlayer. Aspect ratio of the display area (not video) leaving enough room for the subtitles needs to be determined beforehand, applied in right click -> Window Size -> Set Custom Window Size. Then `display_width` and `display_height` should match it too. Before playing the video, uncheck "Display text subs inside the video" in Preferences -> Subtitles.
+#### What video player supports the generated subtitles?
+
+As far as I am aware of, VLC media player and PotPlayer on Windows works fine. [Comparison of video player software: Subtitle ability - Wikipidia](https://en.wikipedia.org/wiki/Comparison_of_video_player_software#Subtitle_ability)
+
+
+#### Why the VLC media player sometimes fails to show some elements?
+
+Try restart the video, without unloading the subtitles. For example, click "next media" while in "loop one" mode.
+
+
+#### The moving cursor jumps rather than moves in PotPlayer.
+
+Try right click video -> subtitles -> Enable ASS/SSA subtitle animations.
+
+
+#### Why are everything looks like stretched?
+
+`display_width` and `display_height` do not match the video aspect ratio.
+
+
+#### How to burn the subtitles into the video?
+
+FFmpeg is capable of doing this. For example: `ffmpeg -i {input_video_path} -vf scale={width}x{height},subtitles={subtitle_path} {output_path}`. [FFmpeg wiki: How To Burn Subtitles Into Video](https://trac.ffmpeg.org/wiki/HowToBurnSubtitlesIntoVideo)
+
+
+#### How to put the subtitles outside the video?
+
+The solution is for PotPlayer. Aspect ratio of the display area (not video) leaving enough room for the subtitles needs to be determined beforehand, applied in right click -> Window Size -> Set Custom Window Size. Then `display_width` and `display_height` should match it too. Before playing the video, uncheck "Display text subs inside the video" in Preferences -> Subtitles.
+
+
+#### There are small gaps between two rectangles in the timelines, while these two actions are exactly consecutive.
+
+It is strongly recommended to set `display_width` and `display_height` to integer multiples of the display area dimensions. Normally the display area for subtitles is just the video frame area (except for the scenario in the section above: "How to put the subtitles outside the video"). Following these advices, one should be able to avoid this problem (that seems to be related to implementation of .ass subtitles).

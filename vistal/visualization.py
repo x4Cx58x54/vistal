@@ -57,8 +57,10 @@ def vistal(
 
         video_duration: duration of video in seconds.
 
-        display_width, display_height: to be brief, match the aspect ratio and
-        set the display_height to a few thousand and it works just fine.
+        display_width, display_height: to be brief, they should be integer
+        multiples of the display area width and height (normally, video frame
+        size). Since they determine the resolution, they should be large enough,
+        and setting them to values around a few thousand works fine.
 
         They are width and height of the canvas in pixels (PlayResX and PlayResY
         in ASS subtitles). Therefore it is not a must for these args to equal the
