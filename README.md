@@ -113,7 +113,7 @@ sub.save('tutorial.ass')
 
 Finally, play the video and load the subtitle to the player. Make sure your video player supports `.ass` subtitle, for example PotPlayer. Here is how it looks like on a blank video:
 
-https://raw.githubusercontent.com/x4Cx58x54/vistal/master/img/tutorial_result.mp4
+https://user-images.githubusercontent.com/41692486/196370592-8b7df8b9-d9a1-4004-9c8b-5df4107809e1.mp4
 
 For another complete example, see [example.py](./example.py).
 
