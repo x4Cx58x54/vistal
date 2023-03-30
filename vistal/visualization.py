@@ -35,7 +35,8 @@ def vistal(
     text_outline: Optional[int] = None,
     text_shadow: Optional[int] = None,
     cursor_width: Optional[int] = None,
-    show_legend = False,
+    show_legend: Optional[bool] = False,
+    legend_font_size: Optional[int] = None,
     n_fold: int = 1,
     background_colour: Colour = Colour(alpha=255),
 ):
@@ -89,7 +90,9 @@ def vistal(
 
         cursor_width: optional int of cursor width in pixels.
 
-        show_legend: bool for whether show colour legend.
+        show_legend: optional bool for whether show colour legend.
+
+        legend_font_size: optional int for overriding font_size of legend,
 
         n_fold: fold each timeline into equal parts for clearer illustration for
         relatively short actions.
@@ -154,9 +157,11 @@ def vistal(
         BorderStyle=0, Outline=text_outline, Shadow=text_shadow,
         Alignment=7, MarginL=0, MarginR=10, MarginV=10
     ))
+    if legend_font_size is None:
+        legend_font_size = font_size
     vs.append_item(V4PlusStyleItem(
         'Style', Name='LegendText',
-        Fontname=font_name, Fontsize=font_size,
+        Fontname=font_name, Fontsize=legend_font_size,
         PrimaryColour=text_colour.style(),
         BorderStyle=0, Outline=text_outline, Shadow=text_shadow,
         Alignment=7, MarginL=0, MarginR=10, MarginV=10
@@ -179,6 +184,8 @@ def vistal(
             es.append_item(item)
 
     if show_legend:
+        if legend_font_size and legend_font_size > 0:
+            tl_pos_cal.font_size = legend_font_size
         csl = ColourSchemeLegend(colour_scheme, 0, video_duration, tl_pos_cal)
         for item in csl:
             es.append_item(item)
